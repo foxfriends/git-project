@@ -3,7 +3,6 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::fmt::{self, Display, Formatter};
-use std::path::PathBuf;
 use git2::Repository;
 use indoc::indoc;
 use structopt::StructOpt;
@@ -36,7 +35,7 @@ impl Error for InitError {}
 pub fn init(args: Init) -> Result<(), Box<dyn Error>> {
     let repository = Repository::discover(current_dir()?)?;
     let workdir = repository.workdir().unwrap();
-    let root: PathBuf = workdir.join(PROJECT_FILE_NAME);
+    let root = workdir.join(PROJECT_FILE_NAME);
     if root.exists() { return Err(Box::new(InitError)) }
 
     let hooks_path = repository.path().join("hooks");
