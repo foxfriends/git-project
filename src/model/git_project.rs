@@ -1,7 +1,8 @@
 use std::env::current_dir;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
-use std::fs::read_to_string;
+use std::fs::{read_to_string, File};
+use std::io::Write;
 use git2::Repository;
 use serde::{Serialize, Deserialize};
 use super::Project;
@@ -35,6 +36,17 @@ impl GitProject {
         let git_project = toml::from_str(&string)?;
 
         Ok(git_project)
+    }
+
+    pub fn save(&self) -> Result<(), Box<dyn Error>> {
+        let repository = Repository::discover(current_dir()?)?;
+        let workdir = repository.workdir().unwrap();
+        let root = workdir.join(PROJECT_FILE_NAME);
+
+        let project_string = toml::to_string_pretty(self)?;
+        let mut file = File::create(root)?;
+        write!(file, "{}", project_string)?;
+        Ok(())
     }
 
     pub fn projects(&self) -> &[Project] {
