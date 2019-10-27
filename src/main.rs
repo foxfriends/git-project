@@ -1,6 +1,7 @@
 use structopt::StructOpt;
 
 mod commands;
+mod model;
 use commands::*;
 
 const PROJECT_FILE_NAME: &'static str = ".gitproject";
