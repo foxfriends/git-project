@@ -58,36 +58,11 @@ pub fn init(args: Init) -> Result<(), Box<dyn Error>> {
         .or_else(|| workdir.file_name().and_then(|osstr| osstr.to_str()).map(str::to_string))
         .unwrap_or("New project".to_string());
 
-    let task_id = TaskID::new("git-project");
-    let git_project = GitProject {
-        projects: vec![
-            Project {
-                name,
-                description: Some("Write a description of your project here.".to_string()),
-                columns: vec![
-                    Column {
-                        name: "New".to_string(),
-                        description: Some("Tasks that have not yet been started".to_string()),
-                        tasks: vec![],
-                    },
-                    Column {
-                        name: "In Progress".to_string(),
-                        description: Some("Tasks that are currently being worked on".to_string()),
-                        tasks: vec![task_id.clone()],
-                    },
-                    Column {
-                        name: "Done".to_string(),
-                        description: Some("Tasks that have been completed recently".to_string()),
-                        tasks: vec![],
-                    },
-                ],
-                tasks: vec![
-                    Task {
-                        id: task_id,
-                        tags: vec!["meta".to_string()],
-                        assignee,
-                        name: "Welcome to git-project".to_string(),
-                        description: format!(r#"Your first task is to set up your project board. Give your project a name and
+    let task = Task::new("git-project")
+        .name("Welcome to Git project")
+        .tag("meta")
+        .assignee(assignee)
+        .description(format!(r#"Your first task is to set up your project board. Give your project a name and
 description, make sure the columns are to your liking, and maybe even put in
 a few tasks!
 
@@ -99,14 +74,29 @@ Here's how:
     later (assuming you set the hooks up)
 4.  Commit your changes. There will be instructions in the generated commit message
     for how to proceed.
-"#, 
-                            hooks_message
-                        ),
-                    },
-                ],
-            },
-        ],
-    };
+"#, hooks_message))
+        .build().unwrap();
+
+    let git_project = GitProject::new()
+        .project(Project::new(name)
+            .description("Write a description of your project here.")
+            .column(Column::new("New")
+                .description("Tasks that have not yet been started")
+                .build().unwrap()
+            )
+            .column(Column::new("In Progress")
+                .description("Tasks that are currently being worked on")
+                .add_task(&task)
+                .build().unwrap()
+            )
+            .column(Column::new("Done")
+                .description("Tasks that have been completed recently")
+                .build().unwrap()
+            )
+            .task(task)
+            .build().unwrap()
+        )
+        .build().unwrap();
 
     let project_string = toml::to_string_pretty(&git_project)?;
     let mut file = File::create(root)?;
