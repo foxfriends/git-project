@@ -27,6 +27,8 @@ enum Args {
     /// Note that hooks are *not* included when distributing your repository, so subsequent clones
     /// will require you to install hooks again.
     Hooks,
+    /// The built in Git hooks. Not meant to be used manually.
+    Hook(Hook),
 }
 
 #[paw::main]
@@ -36,6 +38,7 @@ fn main(args: Args) {
         Args::Init(args) => init(args),
         Args::Current => current(),
         Args::Hooks => hooks(),
+        Args::Hook(args) => hook(args),
     };
 
     if let Err(error) = result {
