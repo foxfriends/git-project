@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::rc::Rc;
 use cursive::Cursive;
-use cursive::{menu::*, traits::*, views::*, event};
+use cursive::{align::*, menu::*, traits::*, views::*, event};
 use crate::model::GitProject;
 
 #[derive(Clone, Debug)]
@@ -83,20 +83,38 @@ impl State {
             left_nav.add_item(project.name(), i);
         }
         left_nav.set_selection(self.selected_project.get());
+        let padded_left_nav = PaddedView::new(((1, 1), (0, 0)), left_nav);
 
         let mut container = LinearLayout::horizontal();
-        container.add_child(Panel::new(left_nav));
+        container.add_child(Panel::new(padded_left_nav));
 
         if let Some(project) = git_project.projects().iter().nth(self.selected_project.get()) {
             let header = LinearLayout::vertical()
                 .child(TextView::new(project.name()))
                 .child(TextView::new(project.description().unwrap_or("")));
-            let project_board = DummyView;
+
+            let mut project_board = LinearLayout::horizontal();
+            for column in project.columns() {
+                let mut column_view = LinearLayout::vertical();
+                for task in column.tasks().iter().filter_map(|task_id| project.task_with_id(task_id)) {
+                    let task_contents = TextView::new(task.description());
+                    let task_view = Panel::new(PaddedView::new(((1, 1), (1, 1)), task_contents))
+                        .title(task.name())
+                        .title_position(HAlign::Left)
+                        .full_width();
+                    column_view.add_child(task_view);
+                }
+                let scroll_view = ScrollView::new(column_view)
+                    .full_screen();
+                project_board.add_child(Panel::new(scroll_view).title(column.name()));
+            }
+
             let content = LinearLayout::vertical()
                 .child(header)
                 .child(project_board)
                 .full_width();
-            container.add_child(Panel::new(content));
+            let padded_content = PaddedView::new(((1, 1), (0, 0)), content);
+            container.add_child(Panel::new(padded_content));
         } else {
             let empty_state = TextView::new("No projects found. Create a new one?");
             container.add_child(Panel::new(empty_state));

@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use super::{Column, Task};
+use super::{Column, Task, TaskID};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Project {
@@ -29,6 +29,11 @@ impl Project {
     pub fn tasks(&self) -> &[Task] {
         self.tasks.as_slice()
     }
+
+    pub fn task_with_id(&self, task_id: &TaskID) -> Option<&Task> {
+        self.tasks.iter()
+            .find(|task| task.id() == task_id)
+    }
 }
 
 #[derive(Debug)]
@@ -41,7 +46,7 @@ pub struct ProjectBuilder {
 
 impl ProjectBuilder {
     fn new(name: String) -> Self {
-        Self { 
+        Self {
             name,
             description: None,
             columns: vec![],
