@@ -36,3 +36,9 @@ Here's how:
 4.  Commit your changes. There will be instructions in the generated commit message
     for how to proceed.
 '''
+
+[[projects]]
+name = 'second-test'
+description = 'hello this is second test'
+columns = []
+tasks = []
