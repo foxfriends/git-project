@@ -1,11 +1,10 @@
 [[projects]]
 name = 'git-project'
-description = 'Write a description of your project here.'
 
 [[projects.columns]]
 name = 'New'
 description = 'Tasks that have not yet been started'
-tasks = ['git-project']
+tasks = []
 
 [[projects.columns]]
 name = 'In Progress'
@@ -15,7 +14,7 @@ tasks = ['git-project']
 [[projects.columns]]
 name = 'Done'
 description = 'Tasks that have been completed recently'
-tasks = ['git-project', 'git-project']
+tasks = []
 
 [[projects.tasks]]
 id = 'git-project'

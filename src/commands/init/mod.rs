@@ -4,7 +4,6 @@ use std::fs::File;
 use std::io::Write;
 use std::fmt::{self, Display, Formatter};
 use git2::Repository;
-use indoc::indoc;
 use structopt::StructOpt;
 use crate::PROJECT_FILE_NAME;
 use crate::model::*;
@@ -45,10 +44,7 @@ pub fn init(args: Init) -> Result<(), Box<dyn Error>> {
     let hooks_message = if will_add_hooks {
         "1.  The git hooks have been set up automatically, so that part is already ready to go."
     } else {
-        indoc!(r#"
-            1.  Git hooks have not been added to your repository yet. If automatic task management
-                is a feature you are interested in, run `git project hooks` to append them to your
-                existing hooks, or integrate them manually (see the project README online)."#)
+        "1.  Git hooks have not been added to your repository yet. If automatic task management is a feature you are interested in, run `git project hooks` to append them to your existing hooks, or integrate them manually (see the project README online)."
     };
 
     let config = repository.config()?.snapshot()?;
@@ -61,18 +57,13 @@ pub fn init(args: Init) -> Result<(), Box<dyn Error>> {
         .name("Welcome to Git project")
         .tag("meta")
         .assignee(assignee)
-        .description(format!(r#"Your first task is to set up your project board. Give your project a name and
-description, make sure the columns are to your liking, and maybe even put in
-a few tasks!
+        .description(format!(r#"Your first task is to set up your project board. Give your project a name and description, make sure the columns are to your liking, and maybe even put in a few tasks!
 
 Here's how:
 {}
-2.  Open the editor by running `git project open`, and set the name, description,
-    columns, and maybe even add some tasks.
-3.  There's no need to move this task to the done - it will be moved automatically
-    later (assuming you set the hooks up)
-4.  Commit your changes. There will be instructions in the generated commit message
-    for how to proceed.
+2.  Open the editor by running `git project open`, and set the name, description, columns, and maybe even add some tasks.
+3.  There's no need to move this task to the "Done" column - it will be moved automatically later (assuming you set the hooks up)
+4.  Commit your changes. There will be instructions in the generated commit message for how to proceed.
 "#, hooks_message))
         .build().unwrap();
 

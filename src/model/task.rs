@@ -24,7 +24,7 @@ impl Task {
     }
 
     pub fn name(&self) -> &str {
-        self.name.as_str()
+        self.name.trim()
     }
 
     pub fn assignee(&self) -> Option<&str> {
@@ -32,7 +32,11 @@ impl Task {
     }
 
     pub fn description(&self) -> &str {
-        self.description.as_str()
+        self.description.trim()
+    }
+
+    pub fn short_description(&self) -> &str {
+        self.description.split("\n").next().unwrap().trim()
     }
 }
 

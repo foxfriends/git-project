@@ -34,6 +34,11 @@ impl Project {
         self.tasks.iter()
             .find(|task| task.id() == task_id)
     }
+
+    pub fn column_of_task(&self, task: &Task) -> Option<&Column> {
+        self.columns.iter()
+            .find(|column| column.tasks().contains(task.id()))
+    }
 }
 
 #[derive(Debug)]
