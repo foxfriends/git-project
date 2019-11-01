@@ -54,9 +54,11 @@ impl Project {
             .collect()
     }
 
-    pub fn add_task(&mut self, task: Task, column: usize) {
+    pub fn add_task(&mut self, task: Task, column: usize) -> bool {
+        if self.tasks.iter().find(|t| t.id() == task.id()).is_some() { return false }
         self.columns[column].add_task(&task);
         self.tasks.push(task);
+        true
     }
 }
 

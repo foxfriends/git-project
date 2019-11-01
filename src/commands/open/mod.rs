@@ -340,24 +340,29 @@ impl State {
                 }
             }})
             .button("Save", { let state = self.clone(); move |s| { 
-                let id = s.find_id::<EditView>("new-task-id").unwrap().get_content().to_string();
-                let title = s.find_id::<EditView>("new-task-title").unwrap().get_content().to_string();
+                let id = s.find_id::<EditView>("new-task-id").unwrap().get_content().trim().to_string();
+                let title = s.find_id::<EditView>("new-task-title").unwrap().get_content().trim().to_string();
                 let assignee = s.find_id::<SelectView<Option<String>>>("new-task-assignee").unwrap().selection().and_then(|rc| (*rc).clone());
                 let column = *s.find_id::<SelectView<usize>>("new-task-column").unwrap().selection().unwrap();
-                let description = s.find_id::<TextArea>("new-task-description").unwrap().get_content().to_string();
+                let description = s.find_id::<TextArea>("new-task-description").unwrap().get_content().trim().to_string();
                 if id.is_empty() || title.is_empty() || description.is_empty() {
+                    s.add_layer(Dialog::info("Required information is missing"));
                     return;
                 }
-                let mut task = Task::new(id).name(title).description(description);
+                let mut task = Task::new(&id).name(title).description(description);
                 if let Some(assignee) = assignee { task = task.assignee(assignee); }
                 let task = selected_tags.borrow().iter().fold(task, |task, tag| task.tag(tag)).build().unwrap();
-                state.git_project
+                let success = state.git_project
                     .borrow_mut()
                     .projects_mut()
                     [state.selected_project.get()]
                     .add_task(task, column);
-                s.pop_layer(); 
-                state.reload(s);
+                if success {
+                    s.pop_layer(); 
+                    state.reload(s);
+                } else {
+                    s.add_layer(Dialog::info(format!("A task with ID {} already exists", id)));
+                }
             }});
 
         siv.add_layer(form_dialog);
