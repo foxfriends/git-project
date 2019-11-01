@@ -24,6 +24,10 @@ impl Column {
     pub fn tasks(&self) -> &[TaskID] {
         self.tasks.as_slice()
     }
+
+    pub fn add_task(&mut self, task: &Task) {
+        self.tasks.push(task.id().clone());
+    }
 }
 
 #[derive(Debug)]

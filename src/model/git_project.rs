@@ -52,6 +52,10 @@ impl GitProject {
     pub fn projects(&self) -> &[Project] {
         self.projects.as_slice()
     }
+
+    pub fn projects_mut(&mut self) -> &mut [Project] {
+        self.projects.as_mut()
+    }
 }
 
 #[derive(Debug)]

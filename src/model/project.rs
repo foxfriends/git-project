@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use serde::{Serialize, Deserialize};
 use super::{Column, Task, TaskID};
 
@@ -38,6 +39,24 @@ impl Project {
     pub fn column_of_task(&self, task: &Task) -> Option<&Column> {
         self.columns.iter()
             .find(|column| column.tasks().contains(task.id()))
+    }
+
+    pub fn all_assignees(&self) -> BTreeSet<&str> {
+        self.tasks.iter()
+            .filter_map(|task| task.assignee())
+            .collect()
+    }
+
+    pub fn all_tags(&self) -> BTreeSet<&str> {
+        self.tasks.iter()
+            .flat_map(|task| task.tags())
+            .map(|string| string.as_str())
+            .collect()
+    }
+
+    pub fn add_task(&mut self, task: Task, column: usize) {
+        self.columns[column].add_task(&task);
+        self.tasks.push(task);
     }
 }
 

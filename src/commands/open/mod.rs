@@ -12,6 +12,7 @@ use crate::model::*;
 struct State {
     git_project: Rc<RefCell<GitProject>>,
     selected_project: Rc<Cell<usize>>,
+    unsaved_changes: Rc<Cell<bool>>,
     current_user: String,
 }
 
@@ -31,6 +32,7 @@ impl State {
         Self {
             git_project: Rc::new(RefCell::new(git_project)),
             selected_project: Rc::new(Cell::new(0)),
+            unsaved_changes: Rc::new(Cell::new(false)),
             current_user,
         }
     }
@@ -39,7 +41,11 @@ impl State {
         let mut siv = Cursive::pancurses().unwrap();
         siv.set_autohide_menu(false);
         let file_menu = MenuTree::new()
+            .leaf("New Task", { let state = self.clone(); move |s| { state.new_task(s) }})
+            .leaf("New Column", { let state = self.clone(); move |s| { state.new_column(s) }})
+            .leaf("New Project", { let state = self.clone(); move |s| { state.new_project(s) }})
             .leaf("Save", { let state = self.clone(); move |s| { state.save(s); }})
+            .delimiter()
             .leaf("Quit", { let state = self.clone(); move |s| { state.quit(s); }});
         let edit_menu = MenuTree::new()
             .leaf("New Task", { let state = self.clone(); move |s| { /* TODO */ }});
@@ -68,11 +74,15 @@ impl State {
     }
 
     fn quit(&self, siv: &mut Cursive) {
-        let dialog = Dialog::text("Save before quitting?")
-            .button("Cancel", |s| { s.pop_layer(); })
-            .button("Quit without saving", Cursive::quit)
-            .button("Save and quit", { let state = self.clone(); move |s| { state.save(s); s.quit(); }});
-        siv.add_layer(dialog);
+        if self.unsaved_changes.get() {
+            let dialog = Dialog::text("Save before quitting?")
+                .button("Cancel", |s| { s.pop_layer(); })
+                .button("Quit without saving", Cursive::quit)
+                .button("Save and quit", { let state = self.clone(); move |s| { state.save(s); s.quit(); }});
+            siv.add_layer(dialog);
+        } else {
+            siv.quit();
+        }
     }
 
     fn handle_result<S, E: Display>(&self, siv: &mut Cursive, result: Result<S, E>) {
@@ -161,7 +171,7 @@ impl State {
         let tags_list = task.tags().iter()
             .map(|tag| TextView::new(format!("#{}", tag)).no_wrap())
             .fold(LinearLayout::vertical(), LinearLayout::child);
-            
+
         let mut assignee_text = StyledString::plain("Assigned to: ");
         match task.assignee() {
             Some(assignee) if assignee == self.current_user => {
@@ -184,7 +194,7 @@ impl State {
             .child(LinearLayout::horizontal()
                 .child(TextView::new("Tags:        "))
                 .child(tags_list));
-            
+
         let task_contents = LinearLayout::horizontal()
             .child(PaddedView::new((1, 1, 0, 0), task_description))
             .child(PaddedView::new((4, 1, 0, 0), task_info));
@@ -198,8 +208,190 @@ impl State {
         siv.add_layer(task_dialog);
     }
 
+    fn new_task(&self, siv: &mut Cursive) {
+        let git_project = self.git_project.borrow();
+        let project = &git_project.projects()[self.selected_project.get()];
+
+        let id = LinearLayout::horizontal()
+            .child(TextView::new("Task ID").fixed_width(12))
+            .child(EditView::new()
+                .with_id("new-task-id")
+                .full_width());
+
+        let title = LinearLayout::horizontal()
+            .child(TextView::new("Title").fixed_width(12))
+            .child(EditView::new()
+                .with_id("new-task-title")
+                .full_width());
+
+        let assignee = LinearLayout::horizontal()
+            .child(TextView::new("Assignee").fixed_width(12))
+            .child(project.all_assignees().into_iter()
+                .fold(SelectView::new().item("None", None), |sel, assignee| sel.item(assignee, Some(assignee.to_string())))
+                .popup()
+                .autojump()
+                .with_id("new-task-assignee"));
+
+        let column = LinearLayout::horizontal()
+            .child(TextView::new("Column").fixed_width(12))
+            .child(project.columns().into_iter()
+                .map(|col| col.name())
+                .enumerate()
+                .fold(SelectView::<usize>::new(), |sel, (i, col)| sel.item(col, i))
+                .popup()
+                .autojump()
+                .with_id("new-task-column"));
+
+        let description = LinearLayout::horizontal()
+            .child(TextView::new("Description").fixed_width(12))
+            .child(TextArea::new()
+                .with_id("new-task-description")
+                .full_width()
+                .min_height(5));
+
+        let selected_tags = Rc::new(RefCell::new(vec![]));
+        let tags = LinearLayout::horizontal()
+            .child(LinearLayout::vertical().child(DummyView).child(TextView::new("Tags").fixed_width(12)))
+            .child(Panel::new(OnEventView::new(SelectView::<String>::new().with_id("selected-tags"))
+                    .on_event(event::Key::Del, { let selected_tags = selected_tags.clone(); move |s| {
+                        // remove a tag from the list:
+                        // 1.  Remove from selected tags
+                        // 2.  Remove from selected list
+                        // 3.  Add to suggestions
+                        let mut selected_tags_view = s.find_id::<SelectView>("selected-tags").unwrap();
+                        if let Some(id) = selected_tags_view.selected_id() {
+                            let tag = selected_tags.borrow_mut().remove(id);
+                            selected_tags_view.remove_item(id)(s);
+                            let mut suggested_tags_view = s.find_id::<SelectView>("suggested-tags").unwrap();
+                            suggested_tags_view.add_item_str(tag);
+                        }
+                    }})
+                    .min_size((10, 2))))
+            .child(LinearLayout::vertical()
+                .child(DummyView)
+                .child(project.all_tags().into_iter()
+                    .fold(SelectView::<String>::new().item("Add tag", "".to_string()), SelectView::item_str)
+                    .on_submit({ let selected_tags = selected_tags.clone(); move |s, tag: &String| {
+                        // add a tag from the list:
+                        // 1.  Add to selected tags
+                        // 2.  Add to selected list
+                        // 3.  Remove from suggestions
+                        if tag.is_empty() { return }
+                        let mut selected_tags_view = s.find_id::<SelectView>("selected-tags").unwrap();
+                        selected_tags.borrow_mut().push(tag.clone());
+                        selected_tags_view.add_item_str(tag);
+                        let mut suggested_tags_view = s.find_id::<SelectView>("suggested-tags").unwrap();
+                        let id = suggested_tags_view.selected_id().unwrap();
+                        suggested_tags_view.remove_item(id);
+                        suggested_tags_view.set_selection(0);
+                    }})
+                    .popup()
+                    .with_id("suggested-tags"))
+                .child(EditView::new()
+                    .on_submit_mut({ let selected_tags = selected_tags.clone(); move |s, tag| {
+                        // add a newly invented tag
+                        // 1.  Add to selected tags
+                        // 2.  Add to selected list
+                        // 3.  Remove from suggestions
+                        // 4.  Reset input field
+                        let tag = tag.trim();
+                        if tag.contains(|ch: char| ch.is_whitespace() || ch == ',') || tag.is_empty() { return }
+                        if selected_tags.borrow().contains(&tag.to_string()) { return }
+                        selected_tags.borrow_mut().push(tag.to_string());
+
+                        let mut selected_tags_view = s.find_id::<SelectView>("selected-tags").unwrap();
+                        selected_tags_view.add_item_str(tag);
+
+                        let mut suggested_tags_view = s.find_id::<SelectView>("suggested-tags").unwrap();
+                        let position = suggested_tags_view.iter().position(|(_, suggestion)| suggestion == tag);
+                        if let Some(position) = position {
+                            suggested_tags_view.remove_item(position)(s);
+                        }
+
+                        let mut edit_view = s.find_id::<EditView>("tag-input").unwrap();
+                        edit_view.set_content("")(s);
+                    }})
+                    .with_id("tag-input")
+                    .fixed_width(20)));
+
+        let form = LinearLayout::vertical()
+            .child(id)
+            .child(DummyView)
+            .child(title)
+            .child(DummyView)
+            .child(assignee)
+            .child(DummyView)
+            .child(column)
+            .child(DummyView)
+            .child(description)
+            .child(DummyView)
+            .child(tags);
+
+        let form_dialog = Dialog::around(PaddedView::new((0, 0, 1, 0), form))
+            .button("Discard", { let state = self.clone(); let selected_tags = selected_tags.clone(); move |s| { 
+                let id = s.find_id::<EditView>("new-task-id").unwrap().get_content().to_string();
+                let title = s.find_id::<EditView>("new-task-title").unwrap().get_content().to_string();
+                let assignee = s.find_id::<SelectView<Option<String>>>("new-task-assignee").unwrap().selection().and_then(|rc| (*rc).clone());
+                let description = s.find_id::<TextArea>("new-task-description").unwrap().get_content().to_string();
+                if !id.is_empty() || !title.is_empty() || assignee.is_some() || !description.is_empty() || !selected_tags.borrow().is_empty() {
+                    state.confirm(s, "Discard new task?", |s| { s.pop_layer(); });
+                } else {
+                    s.pop_layer();
+                }
+            }})
+            .button("Save", { let state = self.clone(); move |s| { 
+                let id = s.find_id::<EditView>("new-task-id").unwrap().get_content().to_string();
+                let title = s.find_id::<EditView>("new-task-title").unwrap().get_content().to_string();
+                let assignee = s.find_id::<SelectView<Option<String>>>("new-task-assignee").unwrap().selection().and_then(|rc| (*rc).clone());
+                let column = *s.find_id::<SelectView<usize>>("new-task-column").unwrap().selection().unwrap();
+                let description = s.find_id::<TextArea>("new-task-description").unwrap().get_content().to_string();
+                if id.is_empty() || title.is_empty() || description.is_empty() {
+                    return;
+                }
+                let mut task = Task::new(id).name(title).description(description);
+                if let Some(assignee) = assignee { task = task.assignee(assignee); }
+                let task = selected_tags.borrow().iter().fold(task, |task, tag| task.tag(tag)).build().unwrap();
+                state.git_project
+                    .borrow_mut()
+                    .projects_mut()
+                    [state.selected_project.get()]
+                    .add_task(task, column);
+                s.pop_layer(); 
+                state.reload(s);
+            }});
+
+        siv.add_layer(form_dialog);
+    }
+
+    fn new_column(&self, siv: &mut Cursive) {
+
+    }
+
+    fn new_project(&self, siv: &mut Cursive) {
+
+    }
+
     fn edit_task(&self, task: Task, siv: &mut Cursive) {
         // TODO
+    }
+
+    fn edit_column(&self, column: Column, siv: &mut Cursive) {
+        // TODO
+    }
+
+    fn edit_project(&self, project: Project, siv: &mut Cursive) {
+        // TODO
+    }
+
+    fn confirm<I, F>(&self, siv: &mut Cursive, title: I, callback: F)
+    where I: Into<String>, F: 'static + Fn(&mut Cursive) {
+        let dialog = Dialog::text(title)
+            .button("Yes", move |s| {
+                s.pop_layer();
+                callback(s);
+            })
+            .button("No", |s| { s.pop_layer(); });
+        siv.add_layer(dialog);
     }
 }
 

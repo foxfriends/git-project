@@ -4,12 +4,15 @@ name = 'git-project'
 [[projects.columns]]
 name = 'New'
 description = 'Tasks that have not yet been started'
-tasks = []
+tasks = ['test-2']
 
 [[projects.columns]]
 name = 'In Progress'
 description = 'Tasks that are currently being worked on'
-tasks = ['git-project']
+tasks = [
+    'git-project',
+    'hello-world',
+]
 
 [[projects.columns]]
 name = 'Done'
@@ -30,6 +33,23 @@ Here's how:
 3.  There's no need to move this task to the done - it will be moved automatically later (assuming you set the hooks up)
 4.  Commit your changes. There will be instructions in the generated commit message for how to proceed.
 '''
+
+[[projects.tasks]]
+id = 'hello-world'
+tags = [
+    'test',
+    'meta',
+]
+name = 'Test task for testing'
+assignee = 'cameldridge@gmail.com'
+description = '''This is a test task. It's for testing.'''
+
+[[projects.tasks]]
+id = 'test-2'
+tags = ['Meta']
+name = 'Hello World'
+assignee = 'cameldridge@gmail.com'
+description = 'New task for cameron'
 
 [[projects]]
 name = 'second-test'
