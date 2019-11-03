@@ -41,6 +41,11 @@ impl Project {
             .find(|column| column.tasks().contains(task.id()))
     }
 
+    pub fn column_index_of_task(&self, task: &Task) -> Option<usize> {
+        self.columns.iter()
+            .position(|column| column.tasks().contains(task.id()))
+    }
+
     pub fn all_assignees(&self) -> BTreeSet<&str> {
         self.tasks.iter()
             .filter_map(|task| task.assignee())
@@ -59,6 +64,15 @@ impl Project {
         self.columns[column].add_task(&task);
         self.tasks.push(task);
         true
+    }
+
+    pub fn replace_task(&mut self, original_task: &TaskID, task: Task, column: usize) {
+        for column in self.columns.iter_mut() {
+            column.remove_task(original_task);
+        }
+        self.tasks.retain(|task| task.id() != original_task);
+        self.columns[column].add_task(&task);
+        self.tasks.push(task);
     }
 }
 

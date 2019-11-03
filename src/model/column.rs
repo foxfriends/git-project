@@ -28,6 +28,10 @@ impl Column {
     pub fn add_task(&mut self, task: &Task) {
         self.tasks.push(task.id().clone());
     }
+
+    pub fn remove_task(&mut self, task: &TaskID) {
+        self.tasks.retain(|id| id != task);
+    }
 }
 
 #[derive(Debug)]

@@ -142,7 +142,8 @@ impl State {
     }
 
     fn edit_task(&self, task: Task, siv: &mut Cursive) {
-        // TODO
+        let form_dialog = form::task::edit(self.clone(), &task);
+        siv.add_layer(form_dialog);
     }
 
     fn edit_column(&self, column: Column, siv: &mut Cursive) {

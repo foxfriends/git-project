@@ -46,7 +46,7 @@ description = '''This is a test task. It's for testing.'''
 
 [[projects.tasks]]
 id = 'test-2'
-tags = ['Meta']
+tags = ['meta']
 name = 'Hello World'
 assignee = 'cameldridge@gmail.com'
 description = 'New task for cameron'
