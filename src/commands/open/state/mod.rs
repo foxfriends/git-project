@@ -7,6 +7,7 @@ use cursive::{align::*, menu::*, theme::*, traits::*, views::*, utils::markup::S
 use crate::model::*;
 
 mod board;
+mod help;
 mod form;
 
 #[derive(Clone, Debug)]
@@ -51,10 +52,10 @@ impl State {
 
     fn reload(&self, siv: &mut Cursive) {
         siv.pop_layer();
-        let project_view = self.git_project_view();
+        let project_view = board::view(self.clone());
         let global_events = OnEventView::new(project_view)
             .on_event(event::Key::Esc, |s| s.select_menubar())
-            .on_event('?', show_help);
+            .on_event('?', help::show);
         siv.add_fullscreen_layer(global_events);
     }
 
@@ -82,30 +83,6 @@ impl State {
                 .button("Ok", |s| { s.pop_layer(); });
             siv.add_layer(dialog);
         }
-    }
-
-    fn git_project_view(&self) -> impl View {
-        let git_project = self.git_project.borrow();
-
-        let mut left_nav = SelectView::new()
-            .on_select({ let state = self.clone(); move |s, i| {
-                state.selected_project.set(*i);
-                state.reload(s);
-            }});
-        for (i, project) in git_project.projects().iter().enumerate() {
-            left_nav.add_item(project.name(), i);
-        }
-        left_nav.set_selection(self.selected_project.get());
-        let padded_left_nav = PaddedView::new((1, 1, 0, 0), left_nav);
-
-        LinearLayout::horizontal()
-            .child(Panel::new(padded_left_nav))
-            .child(board::board(self.clone()))
-            .full_screen()
-    }
-
-    fn project_view(&self) -> impl View {
-        board::board(self.clone())
     }
 
     fn show_task(&self, task: Task, siv: &mut Cursive) {
@@ -186,15 +163,4 @@ impl State {
             .button("No", |s| { s.pop_layer(); });
         siv.add_layer(dialog);
     }
-}
-
-fn show_help(siv: &mut Cursive) {
-    let help_text = LinearLayout::vertical()
-        .child(TextView::new("?: Show this help"));
-
-    let dialog = Dialog::around(help_text)
-        .title("Help")
-        .button("Ok", |s| { s.pop_layer(); });
-
-    siv.add_layer(dialog);
 }

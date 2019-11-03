@@ -1,22 +1,15 @@
-use cursive::{views::*, view::*, theme::*, utils::markup::StyledString};
+use cursive::{views::*, view::*};
 use super::State;
 
+mod board;
 mod column;
 mod task;
 
-pub fn board(state: State) -> impl View {
-    let git_project = state.git_project.borrow();
-    let project = &git_project.projects()[state.selected_project.get()];
+mod nav;
 
-    let header = LinearLayout::vertical()
-        .child(TextView::new(project.name()).effect(Effect::Bold))
-        .child(TextView::new(project.description().map(Into::into).unwrap_or(StyledString::styled("[No description]", PaletteColor::Secondary))));
-
-    let project_board = project.columns().iter()
-        .map(|col| column::column(state.clone(), project, col))
-        .fold(LinearLayout::horizontal(), LinearLayout::child);
-
-    LinearLayout::vertical()
-        .child(Panel::new(PaddedView::new((1, 1, 0, 0), header)).full_width())
-        .child(ScrollView::new(project_board).full_screen())
+pub fn view(state: State) -> impl View {
+    LinearLayout::horizontal()
+        .child(nav::new(state.clone()))
+        .child(board::board(state))
+        .full_screen()
 }

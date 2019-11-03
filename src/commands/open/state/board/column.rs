@@ -1,6 +1,6 @@
 use cursive::{views::*, view::*};
+use super::State;
 use super::task;
-use super::super::State;
 use crate::model::*;
 
 pub fn column(state: State, project: &Project, column: &Column) -> impl View {
