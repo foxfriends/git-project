@@ -1,4 +1,4 @@
-use cursive::{views::*, view::*, theme::*, utils::markup::StyledString};
+use cursive::{views::*, view::*, theme::*};
 use super::State;
 use super::column;
 
@@ -8,7 +8,7 @@ pub fn board(state: State) -> impl View {
 
     let header = LinearLayout::vertical()
         .child(TextView::new(project.name()).effect(Effect::Bold))
-        .child(TextView::new(project.description().map(Into::into).unwrap_or(StyledString::styled("[No description]", PaletteColor::Secondary))));
+        .child(TextView::new(project.description()));
 
     let project_board = project.columns().iter()
         .map(|col| column::column(state.clone(), project, col))

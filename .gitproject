@@ -1,5 +1,6 @@
 [[projects]]
 name = 'git-project'
+description = ''
 
 [[projects.columns]]
 name = 'New'
@@ -52,7 +53,13 @@ assignee = 'cameldridge@gmail.com'
 description = 'New task for cameron'
 
 [[projects]]
-name = 'second-test'
+name = 'Second test'
 description = 'hello this is second test'
+columns = []
+tasks = []
+
+[[projects]]
+name = 'Third test'
+description = '''Here's another project, created in the UI'''
 columns = []
 tasks = []

@@ -5,7 +5,7 @@ use super::{Column, Task, TaskID};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Project {
     name: String,
-    description: Option<String>,
+    description: String,
     columns: Vec<Column>,
     tasks: Vec<Task>,
 }
@@ -15,12 +15,21 @@ impl Project {
         ProjectBuilder::new(name.as_ref().to_string())
     }
 
+    pub fn edit(&self) -> ProjectBuilder {
+        ProjectBuilder {
+            name: self.name.clone(),
+            description: Some(self.description.clone()),
+            columns: self.columns.clone(),
+            tasks: self.tasks.clone(),
+        }
+    }
+
     pub fn name(&self) -> &str {
         self.name.as_str()
     }
 
-    pub fn description(&self) -> Option<&str> {
-        self.description.as_ref().map(String::as_str)
+    pub fn description(&self) -> &str {
+        self.description.as_str()
     }
 
     pub fn columns(&self) -> &[Column] {
@@ -94,6 +103,13 @@ impl ProjectBuilder {
         }
     }
 
+    pub fn name<I: AsRef<str>>(self, name: I) -> Self {
+        Self {
+            name: name.as_ref().to_string(),
+            ..self
+        }
+    }
+
     pub fn description<I: AsRef<str>>(self, description: I) -> Self {
         Self {
             description: Some(description.as_ref().to_string()),
@@ -112,11 +128,9 @@ impl ProjectBuilder {
     }
 
     pub fn build(self) -> Result<Project, Self> {
-        Ok(Project {
-            name: self.name,
-            description: self.description,
-            columns: self.columns,
-            tasks: self.tasks,
-        })
+        match self {
+            ProjectBuilder { name, description: Some(description), columns, tasks } => Ok(Project { name, description, columns, tasks }),
+            _=> Err(self),
+        }
     }
 }

@@ -39,11 +39,17 @@ impl State {
             .leaf("Save", { let state = self.clone(); move |s| { state.save(s); }})
             .delimiter()
             .leaf("Quit", { let state = self.clone(); move |s| { state.quit(s); }});
-        let edit_menu = MenuTree::new()
-            .leaf("New Task", { let state = self.clone(); move |s| { /* TODO */ }});
+        let project_menu = MenuTree::new()
+            .leaf("Edit Project", { let state = self.clone(); move |s| { 
+                if let Some(project) = state.git_project.borrow().projects().iter().skip(state.selected_project.get()).next() {
+                    state.edit_project(project.clone(), s);
+                } else {
+                    state.new_project(s);
+                }
+            }});
         siv.menubar()
             .add_subtree("File", file_menu)
-            .add_subtree("Edit", edit_menu);
+            .add_subtree("Project", project_menu);
 
         self.reload(&mut siv);
 
@@ -97,24 +103,28 @@ impl State {
     }
 
     fn new_column(&self, siv: &mut Cursive) {
-
+        let form_dialog = form::column::new(self.clone());
+        siv.add_layer(form_dialog);
     }
 
     fn new_project(&self, siv: &mut Cursive) {
-
+        let form_dialog = form::project::new(self.clone());
+        siv.add_layer(form_dialog);
     }
 
     fn edit_task(&self, task: Task, siv: &mut Cursive) {
-        let form_dialog = form::task::edit(self.clone(), &task);
+        let form_dialog = form::task::edit(self.clone(), task);
         siv.add_layer(form_dialog);
     }
 
     fn edit_column(&self, column: Column, siv: &mut Cursive) {
-        // TODO
+        let form_dialog = form::column::edit(self.clone(), column);
+        siv.add_layer(form_dialog);
     }
 
     fn edit_project(&self, project: Project, siv: &mut Cursive) {
-        // TODO
+        let form_dialog = form::project::edit(self.clone(), project);
+        siv.add_layer(form_dialog);
     }
 
     fn confirm<I, F>(&self, siv: &mut Cursive, title: I, callback: F)

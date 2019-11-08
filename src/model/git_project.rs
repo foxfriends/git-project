@@ -56,6 +56,20 @@ impl GitProject {
     pub fn projects_mut(&mut self) -> &mut [Project] {
         self.projects.as_mut()
     }
+
+    pub fn add_project(&mut self, project: Project) -> bool {
+        if self.projects.iter().find(|original| original.name() == project.name()).is_some() { return false; }
+        self.projects.push(project);
+        true
+    }
+
+    pub fn replace_project(&mut self, original_name: &str, project: Project) {
+        if let Some(position) = self.projects.iter().position(|original| original.name() == original_name) {
+            self.projects[position] = project;
+        } else {
+            self.projects.push(project);
+        }
+    }
 }
 
 #[derive(Debug)]

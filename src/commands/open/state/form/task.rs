@@ -199,6 +199,6 @@ pub fn new(state: State) -> impl View {
     form(state, None)
 }
 
-pub fn edit(state: State, task: &Task) -> impl View {
-    form(state, Some(task))
+pub fn edit(state: State, task: Task) -> impl View {
+    form(state, Some(&task))
 }
