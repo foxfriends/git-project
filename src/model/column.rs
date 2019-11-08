@@ -4,7 +4,7 @@ use super::{Task, TaskID};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Column {
     name: String,
-    description: Option<String>,
+    description: String,
     tasks: Vec<TaskID>,
 }
 
@@ -17,8 +17,8 @@ impl Column {
         self.name.as_str()
     }
 
-    pub fn description(&self) -> Option<&str> {
-        self.description.as_ref().map(String::as_str)
+    pub fn description(&self) -> &str {
+        self.description.as_str()
     }
 
     pub fn tasks(&self) -> &[TaskID] {
@@ -31,6 +31,14 @@ impl Column {
 
     pub fn remove_task(&mut self, task: &TaskID) {
         self.tasks.retain(|id| id != task);
+    }
+
+    pub fn without_tasks(&self) -> Column {
+        Column {
+            name: self.name.clone(),
+            description: self.description.clone(),
+            tasks: vec![],
+        }
     }
 }
 
@@ -63,10 +71,9 @@ impl ColumnBuilder {
     }
 
     pub fn build(self) -> Result<Column, ColumnBuilder> {
-        Ok(Column {
-            name: self.name,
-            description: self.description,
-            tasks: self.tasks,
-        })
+        match self {
+            ColumnBuilder { name, description: Some(description), tasks } => Ok(Column { name, description, tasks }),
+            _ => Err(self),
+        }
     }
 }

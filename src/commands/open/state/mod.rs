@@ -34,7 +34,6 @@ impl State {
         siv.set_autohide_menu(false);
         let file_menu = MenuTree::new()
             .leaf("New Task", { let state = self.clone(); move |s| { state.new_task(s) }})
-            .leaf("New Column", { let state = self.clone(); move |s| { state.new_column(s) }})
             .leaf("New Project", { let state = self.clone(); move |s| { state.new_project(s) }})
             .leaf("Save", { let state = self.clone(); move |s| { state.save(s); }})
             .delimiter()
