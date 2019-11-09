@@ -30,11 +30,21 @@ fn form(state: State, project: Option<&Project>) -> impl View {
         let column = column.clone();
     }};
 
-    let delete_column = { let columns = columns.clone(); move |s: &mut Cursive| {
+    let delete_column = { let state = state.clone(); let columns = columns.clone(); move |s: &mut Cursive| {
         let mut columns_view = s.find_id::<SelectView<Column>>("project-columns").unwrap();
         if let Some(id) = columns_view.selected_id() {
-            let column = columns.borrow_mut().remove(id);
-            columns_view.remove_item(id)(s);
+            let mut columns_ref = columns.borrow_mut();
+            let column = &columns_ref[id];
+            if column.tasks().is_empty() {
+                columns_ref.remove(id);
+                columns_view.remove_item(id)(s);
+            } else {
+                state.confirm(s, format!("Are you sure you want to delete {}? Tasks in this column will be lost.", column.name()), { let columns = columns.clone(); move |s| {
+                    let mut columns_view = s.find_id::<SelectView<Column>>("project-columns").unwrap();
+                    columns.borrow_mut().remove(id);
+                    columns_view.remove_item(id)(s);
+                }});
+            }
         }
     }};
 
