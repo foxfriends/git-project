@@ -15,15 +15,6 @@ impl Project {
         ProjectBuilder::new(name.as_ref().to_string())
     }
 
-    pub fn edit(&self) -> ProjectBuilder {
-        ProjectBuilder {
-            name: self.name.clone(),
-            description: Some(self.description.clone()),
-            columns: self.columns.clone(),
-            tasks: self.tasks.clone(),
-        }
-    }
-
     pub fn name(&self) -> &str {
         self.name.as_str()
     }
@@ -100,13 +91,6 @@ impl ProjectBuilder {
             description: None,
             columns: vec![],
             tasks: vec![],
-        }
-    }
-
-    pub fn name<I: AsRef<str>>(self, name: I) -> Self {
-        Self {
-            name: name.as_ref().to_string(),
-            ..self
         }
     }
 

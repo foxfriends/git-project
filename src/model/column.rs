@@ -65,6 +65,11 @@ impl ColumnBuilder {
         }
     }
 
+    pub fn add_task_id(mut self, task: &TaskID) -> Self {
+        self.tasks.push(task.clone());
+        self
+    }
+
     pub fn add_task(mut self, task: &Task) -> Self {
         self.tasks.push(task.id().clone());
         self

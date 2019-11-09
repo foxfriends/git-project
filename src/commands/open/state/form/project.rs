@@ -14,7 +14,7 @@ fn form(state: State, project: Option<&Project>) -> impl View {
     let name = LinearLayout::horizontal()
         .child(TextView::new("Name").fixed_width(12))
         .child(EditView::new()
-            .content(project.map(Project::name).map(Into::<String>::into).unwrap_or_default())
+            .content(project.map(Project::name).unwrap_or_default())
             .with_id("project-name")
             .full_width());
 
@@ -26,8 +26,15 @@ fn form(state: State, project: Option<&Project>) -> impl View {
             .full_width()
             .min_height(5));
 
-    let edit_column = { let columns = columns.clone(); move |s: &mut Cursive, column: &Column| {
-        let column = column.clone();
+    let edit_column = { let state = state.clone(); let columns = columns.clone(); move |s: &mut Cursive, column: &Column| {
+        let form_dialog = super::column::edit(state.clone(), columns.clone(), column.clone(), { let columns = columns.clone(); move |s| {
+            let mut columns_view = s.find_id::<SelectView<Column>>("project-columns").unwrap();
+            let id = columns_view.selected_id().unwrap();
+            let new_column = &columns.borrow()[id];
+            columns_view.remove_item(id)(s);
+            columns_view.insert_item(id, new_column.name(), new_column.clone());
+        }});
+        s.add_layer(form_dialog);
     }};
 
     let delete_column = { let state = state.clone(); let columns = columns.clone(); move |s: &mut Cursive| {
@@ -56,7 +63,16 @@ fn form(state: State, project: Option<&Project>) -> impl View {
         .child(TextView::new("Columns").fixed_width(12))
         .child(OnEventView::new(columns_list)
             .on_event(event::Key::Del, delete_column.clone())
-            .on_event(event::Key::Backspace, delete_column));
+            .on_event(event::Key::Backspace, delete_column))
+        .child(DummyView)
+        .child(Button::new("Add Column", { let state = state.clone(); let columns = columns.clone(); move |s| {
+            let form_dialog = super::column::new(state.clone(), columns.clone(), { let columns = columns.clone(); move |s| {
+                let mut columns_view = s.find_id::<SelectView<Column>>("project-columns").unwrap();
+                let new_column = columns.borrow().last().unwrap().clone();
+                columns_view.add_item(new_column.name().to_string(), new_column);
+            }});
+            s.add_layer(form_dialog);
+        }}));
 
     let form = LinearLayout::vertical()
         .child(name)
