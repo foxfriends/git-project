@@ -25,7 +25,7 @@ pub fn new(state: State) -> impl View {
         }
         let project = git_project.projects().iter().skip(i).next().unwrap();
 
-        state.confirm(s, format!("Delete {}", project.name()), { let state = state.clone(); move |s| { 
+        state.confirm(s, format!("Delete {}?", project.name()), { let state = state.clone(); move |s| { 
             state.git_project.borrow_mut().delete_project(i); 
             state.selected_project.set(i.saturating_sub(1));
             state.reload(s);

@@ -74,6 +74,13 @@ impl Project {
         self.columns[column].add_task(&task);
         self.tasks.push(task);
     }
+
+    pub fn delete_task(&mut self, task_id: &TaskID) {
+        for column in self.columns.iter_mut() {
+            column.remove_task(task_id);
+        }
+        self.tasks.retain(|task| task.id() != task_id);
+    }
 }
 
 #[derive(Debug)]
