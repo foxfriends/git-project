@@ -39,7 +39,7 @@ impl State {
             .delimiter()
             .leaf("Quit", { let state = self.clone(); move |s| { state.quit(s); }});
         let project_menu = MenuTree::new()
-            .leaf("Edit Project", { let state = self.clone(); move |s| { 
+            .leaf("Edit Project", { let state = self.clone(); move |s| {
                 if let Some(project) = state.git_project.borrow().projects().iter().skip(state.selected_project.get()).next() {
                     state.edit_project(project.clone(), s);
                 } else {
@@ -101,11 +101,6 @@ impl State {
         siv.add_layer(form_dialog);
     }
 
-    fn new_column(&self, siv: &mut Cursive) {
-        let form_dialog = form::column::new(self.clone());
-        siv.add_layer(form_dialog);
-    }
-
     fn new_project(&self, siv: &mut Cursive) {
         let form_dialog = form::project::new(self.clone());
         siv.add_layer(form_dialog);
@@ -113,11 +108,6 @@ impl State {
 
     fn edit_task(&self, task: Task, siv: &mut Cursive) {
         let form_dialog = form::task::edit(self.clone(), task);
-        siv.add_layer(form_dialog);
-    }
-
-    fn edit_column(&self, column: Column, siv: &mut Cursive) {
-        let form_dialog = form::column::edit(self.clone(), column);
         siv.add_layer(form_dialog);
     }
 

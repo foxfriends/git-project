@@ -70,6 +70,10 @@ impl GitProject {
             self.projects.push(project);
         }
     }
+
+    pub fn delete_project(&mut self, index: usize) {
+        self.projects.remove(index);
+    }
 }
 
 #[derive(Debug)]
