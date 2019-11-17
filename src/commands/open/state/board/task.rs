@@ -26,7 +26,9 @@ pub fn card(state: State, task: &Task) -> impl View {
     }};
     let event_handler = OnEventView::new(button)
         .on_event(event::Key::Del, delete_task.clone())
-        .on_event(event::Key::Backspace, delete_task.clone());
+        .on_event(event::Key::Backspace, delete_task.clone())
+        .on_event('l', { let state = state.clone(); let task = task.clone(); move |s| { state.move_task_right(&task, s) }})
+        .on_event('h', { let state = state.clone(); let task = task.clone(); move |s| { state.move_task_left(&task, s) }});
 
     let actions = LinearLayout::horizontal()
         .child(DummyView.full_width())

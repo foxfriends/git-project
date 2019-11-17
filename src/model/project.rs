@@ -81,6 +81,18 @@ impl Project {
         }
         self.tasks.retain(|task| task.id() != task_id);
     }
+
+    pub fn move_task(&mut self, task: &Task, distance: isize) {
+        let previous_column = match self.column_index_of_task(task) {
+            Some(column) => column,
+            None => return,
+        };
+        let new_column = previous_column as isize + distance;
+        if new_column < 0 || new_column > self.columns.len() as isize { return; }
+        let new_column = new_column as usize;
+        self.columns[previous_column].remove_task(task.id());
+        self.columns[new_column].add_task(task);
+    }
 }
 
 #[derive(Debug)]

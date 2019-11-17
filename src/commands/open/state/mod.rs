@@ -111,6 +111,22 @@ impl State {
         siv.add_layer(form_dialog);
     }
 
+    fn move_task_right(&self, task: &Task, siv: &mut Cursive) {
+        let mut git_project = self.git_project.borrow_mut();
+        let project = &mut git_project.projects_mut()[self.selected_project.get()];
+        project.move_task(task, 1);
+        std::mem::drop(git_project);
+        self.reload(siv);
+    }
+
+    fn move_task_left(&self, task: &Task, siv: &mut Cursive) {
+        let mut git_project = self.git_project.borrow_mut();
+        let project = &mut git_project.projects_mut()[self.selected_project.get()];
+        project.move_task(task, -1);
+        std::mem::drop(git_project);
+        self.reload(siv);
+    }
+
     fn edit_project(&self, project: Project, siv: &mut Cursive) {
         let form_dialog = form::project::edit(self.clone(), project);
         siv.add_layer(form_dialog);
