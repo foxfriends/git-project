@@ -11,7 +11,7 @@ pub fn post_commit() -> Result<(), Box<dyn Error>> {
     if path.exists() {
         remove_file(&path)?;
         Command::new("git").arg("add").arg(PROJECT_FILE_NAME).spawn()?;
-        Command::new("git").arg("commit").arg("--amend").arg("--no-verify").spawn()?;
+        Command::new("git").arg("commit").arg("--amend").arg("--no-verify").arg("--quiet").spawn()?;
     }
     Ok(())
 }
