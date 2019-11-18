@@ -1,9 +1,9 @@
 use serde::{Serialize, Deserialize};
-use super::TaskID;
+use super::Id;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Task {
-    id: TaskID,
+    id: Id,
     tags: Vec<String>,
     name: String,
     assignee: Option<String>,
@@ -15,7 +15,7 @@ impl Task {
         TaskBuilder::new(id.as_ref().to_string().into())
     }
 
-    pub fn id(&self) -> &TaskID {
+    pub fn id(&self) -> &Id {
         &self.id
     }
 
@@ -42,7 +42,7 @@ impl Task {
 
 #[derive(Debug)]
 pub struct TaskBuilder {
-    id: TaskID,
+    id: Id,
     tags: Vec<String>,
     name: Option<String>,
     assignee: Option<String>,
@@ -50,7 +50,7 @@ pub struct TaskBuilder {
 }
 
 impl TaskBuilder {
-    fn new(id: TaskID) -> TaskBuilder {
+    fn new(id: Id) -> TaskBuilder {
         TaskBuilder {
             id,
             tags: vec![],

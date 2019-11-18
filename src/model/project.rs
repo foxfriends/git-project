@@ -1,9 +1,10 @@
 use std::collections::BTreeSet;
 use serde::{Serialize, Deserialize};
-use super::{Column, Task, TaskID};
+use super::{Column, Task, Id};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Project {
+    id: Id,
     name: String,
     description: String,
     columns: Vec<Column>,
@@ -11,8 +12,12 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn new<I: AsRef<str>>(name: I) -> ProjectBuilder {
-        ProjectBuilder::new(name.as_ref().to_string())
+    pub fn new<I: AsRef<str>>(id: I) -> ProjectBuilder {
+        ProjectBuilder::new(id.as_ref().to_string().into())
+    }
+
+    pub fn id(&self) -> &Id {
+        &self.id
     }
 
     pub fn name(&self) -> &str {
@@ -31,7 +36,7 @@ impl Project {
         self.tasks.as_slice()
     }
 
-    pub fn task_with_id(&self, task_id: &TaskID) -> Option<&Task> {
+    pub fn task_with_id(&self, task_id: &Id) -> Option<&Task> {
         self.tasks.iter()
             .find(|task| task.id() == task_id)
     }
@@ -66,7 +71,7 @@ impl Project {
         true
     }
 
-    pub fn replace_task(&mut self, original_task: &TaskID, task: Task, column: usize) {
+    pub fn replace_task(&mut self, original_task: &Id, task: Task, column: usize) {
         for column in self.columns.iter_mut() {
             column.remove_task(original_task);
         }
@@ -75,7 +80,7 @@ impl Project {
         self.tasks.push(task);
     }
 
-    pub fn delete_task(&mut self, task_id: &TaskID) {
+    pub fn delete_task(&mut self, task_id: &Id) {
         for column in self.columns.iter_mut() {
             column.remove_task(task_id);
         }
@@ -93,20 +98,34 @@ impl Project {
         self.columns[previous_column].remove_task(task.id());
         self.columns[new_column].add_task(task);
     }
+
+    pub fn move_task_to_column(&mut self, task_id: Id, column_id: Id) {
+        for column in self.columns.iter_mut() {
+            column.remove_task(&task_id);
+        }
+        let target_column = self.columns
+            .iter_mut()
+            .find(|column| column.id() == &column_id);
+        if let Some(column) = target_column {
+            column.add_task_id(task_id);
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct ProjectBuilder {
-    name: String,
+    id: Id,
+    name: Option<String>,
     description: Option<String>,
     columns: Vec<Column>,
     tasks: Vec<Task>,
 }
 
 impl ProjectBuilder {
-    fn new(name: String) -> Self {
+    fn new(id: Id) -> Self {
         Self {
-            name,
+            id,
+            name: None,
             description: None,
             columns: vec![],
             tasks: vec![],
@@ -116,6 +135,13 @@ impl ProjectBuilder {
     pub fn description<I: AsRef<str>>(self, description: I) -> Self {
         Self {
             description: Some(description.as_ref().to_string()),
+            ..self
+        }
+    }
+
+    pub fn name<I: AsRef<str>>(self, name: I) -> Self {
+        Self {
+            name: Some(name.as_ref().to_string()),
             ..self
         }
     }
@@ -132,7 +158,7 @@ impl ProjectBuilder {
 
     pub fn build(self) -> Result<Project, Self> {
         match self {
-            ProjectBuilder { name, description: Some(description), columns, tasks } => Ok(Project { name, description, columns, tasks }),
+            ProjectBuilder { id, name: Some(name), description: Some(description), columns, tasks } => Ok(Project { id, name, description, columns, tasks }),
             _=> Err(self),
         }
     }

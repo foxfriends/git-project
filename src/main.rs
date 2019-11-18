@@ -5,6 +5,7 @@ mod model;
 use commands::*;
 
 const PROJECT_FILE_NAME: &'static str = ".gitproject";
+const PROJECT_TEMP_FILE: &'static str = ".git/.gitproject~";
 
 /// Git-based project boards.
 #[derive(Debug, StructOpt)]

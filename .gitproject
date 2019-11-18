@@ -1,24 +1,25 @@
 [[projects]]
+id = 'gp'
 name = 'git-project'
-description = 'This is a nice project.'
+description = 'Write a description of your project here.'
 
 [[projects.columns]]
+id = 'new'
 name = 'New'
 description = 'Tasks that have not yet been started'
-tasks = ['test-2']
-
-[[projects.columns]]
-name = 'In Progress 2'
-description = 'Tasks that are currently being worked on'
-tasks = [
-    'git-project',
-    'hello-world',
-]
-
-[[projects.columns]]
-name = 'Done'
-description = 'Tasks that have been completed already'
 tasks = []
+
+[[projects.columns]]
+id = 'in-progress'
+name = 'In Progress'
+description = 'Tasks that are currently being worked on'
+tasks = []
+
+[[projects.columns]]
+id = 'done'
+name = 'Done'
+description = 'Tasks that have been completed recently'
+tasks = ['git-project']
 
 [[projects.tasks]]
 id = 'git-project'
@@ -29,25 +30,8 @@ description = '''
 Your first task is to set up your project board. Give your project a name and description, make sure the columns are to your liking, and maybe even put in a few tasks!
 
 Here's how:
-1.  The git hooks have been set up automatically, so that part is already ready to go.
+1.  Git hooks have not been added to your repository yet. If automatic task management is a feature you are interested in, run `git project hooks` to append them to your existing hooks, or integrate them manually (see the project README online).
 2.  Open the editor by running `git project open`, and set the name, description, columns, and maybe even add some tasks.
-3.  There's no need to move this task to the done - it will be moved automatically later (assuming you set the hooks up)
+3.  There's no need to move this task to the "Done" column - it will be moved automatically later (assuming you set the hooks up)
 4.  Commit your changes. There will be instructions in the generated commit message for how to proceed.
 '''
-
-[[projects.tasks]]
-id = 'hello-world'
-tags = [
-    'test',
-    'meta',
-]
-name = 'Test task for testing'
-assignee = 'cameldridge@gmail.com'
-description = '''This is a test task. It's for testing.'''
-
-[[projects.tasks]]
-id = 'test-2'
-tags = ['meta']
-name = 'Hello World'
-assignee = 'cameldridge@gmail.com'
-description = 'New task for cameron'
