@@ -71,12 +71,14 @@ impl Project {
         true
     }
 
-    pub fn replace_task(&mut self, original_task: &Id, task: Task, column: usize) {
-        for column in self.columns.iter_mut() {
-            column.remove_task(original_task);
+    pub fn replace_task(&mut self, original_task: &Id, task: Task, column: Option<usize>) {
+        if let Some(column_index) = column {
+            for column in self.columns.iter_mut() {
+                column.remove_task(original_task);
+            }
+            self.columns[column_index].add_task(&task);
         }
         self.tasks.retain(|task| task.id() != original_task);
-        self.columns[column].add_task(&task);
         self.tasks.push(task);
     }
 

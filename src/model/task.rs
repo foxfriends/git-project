@@ -38,6 +38,16 @@ impl Task {
     pub fn short_description(&self) -> &str {
         self.description.split("\n").next().unwrap().trim()
     }
+
+    pub fn add_tag(&mut self, tag: &str) {
+        if !self.tags.contains(&tag.to_string()) {
+            self.tags.push(tag.to_string());
+        }
+    }
+
+    pub fn remove_tag(&mut self, tag: &str) {
+        self.tags.retain(|t| t != tag);
+    }
 }
 
 #[derive(Debug)]

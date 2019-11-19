@@ -175,7 +175,7 @@ fn form(state: State, task: Option<&Task>) -> impl View {
                 state.git_project
                     .borrow_mut()
                     .projects_mut()[state.selected_project.get()]
-                    .replace_task(editing.id(), task, column);
+                    .replace_task(editing.id(), task, Some(column));
                 s.pop_layer();
                 state.reload(s);
             } else {
